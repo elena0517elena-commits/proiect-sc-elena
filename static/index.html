@@ -492,15 +492,15 @@ function randeazaSarcini(sarcini) {
             ? `<span class="badge text-bg-success ms-2"><i class="bi bi-check2"></i> Finalizat</span>`
             : `<span class="badge text-bg-warning ms-2"><i class="bi bi-hourglass"></i> În curs</span>`;
 
-        const btnFinalizeaza = s.finalizata
-            ? ""
+        const btnStatus = s.finalizata
+            ? `<button class="btn btn-outline-warning btn-sm btn-action" onclick="reactiveaza(${s.id})">
+                   <i class="bi bi-arrow-counterclockwise"></i> Reactivează
+               </button>`
             : `<button class="btn btn-success btn-sm btn-action" onclick="finalizeaza(${s.id})">
                    <i class="bi bi-check2-circle"></i> Finalizează
                </button>`;
 
-        const btnEditeaza = s.finalizata
-            ? ""
-            : `<button class="btn btn-outline-secondary btn-sm btn-action"
+        const btnEditeaza = `<button class="btn btn-outline-secondary btn-sm btn-action"
                    onclick='editeazaSarcina(${s.id}, ${JSON.stringify(s.titlu)}, ${JSON.stringify(s.descriere || "")})'>
                    <i class="bi bi-pencil"></i> Editează
                </button>`;
@@ -512,7 +512,7 @@ function randeazaSarcini(sarcini) {
                 </div>
                 ${s.descriere ? `<p class="task-desc text-muted mb-2">${escapeHtml(s.descriere)}</p>` : ""}
                 <div class="d-flex flex-wrap gap-2">
-                    ${btnFinalizeaza}
+                    ${btnStatus}
                     ${btnEditeaza}
                     <button class="btn btn-outline-danger btn-sm btn-action" onclick="cereStergere(${s.id})">
                         <i class="bi bi-trash"></i> Șterge
@@ -615,22 +615,44 @@ async function finalizeaza(id){
         });
         if (!r.ok) throw new Error();
 
-        // Feedback vizual imediat
         if (card) {
             card.classList.add("done");
-            const titlu = card.querySelector(".task-title");
-            const oldBadge = titlu.querySelector(".badge");
+            const oldBadge = card.querySelector(".task-title .badge");
             if (oldBadge) {
                 oldBadge.className = "badge text-bg-success ms-2";
                 oldBadge.innerHTML = `<i class="bi bi-check2"></i> Finalizat`;
             }
         }
         toast("Sarcină finalizată", "success");
-
-        // Reîncarcă pentru reordonare + actualizare butoane + statistici
         setTimeout(incarcaSarcini, 250);
     } catch {
         toast("Eroare la finalizare", "error");
+    }
+}
+
+async function reactiveaza(id){
+    const token = obtineToken();
+    const card = document.getElementById(`task-${id}`);
+
+    try {
+        const r = await fetch(`${API}/sarcini/${id}/reactiveaza`,{
+            method:"PATCH",
+            headers:{ Authorization:`Bearer ${token}` }
+        });
+        if (!r.ok) throw new Error();
+
+        if (card) {
+            card.classList.remove("done");
+            const oldBadge = card.querySelector(".task-title .badge");
+            if (oldBadge) {
+                oldBadge.className = "badge text-bg-warning ms-2";
+                oldBadge.innerHTML = `<i class="bi bi-hourglass"></i> În curs`;
+            }
+        }
+        toast("Sarcină reactivată", "info");
+        setTimeout(incarcaSarcini, 250);
+    } catch {
+        toast("Eroare la reactivare", "error");
     }
 }
 

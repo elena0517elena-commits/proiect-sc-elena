@@ -101,6 +101,17 @@ def finalize(id: int, db: Session = Depends(get_db), user=Depends(get_user)):
     db.commit()
     return {"msg": "ok"}
 
+@app.patch("/sarcini/{id}/reactiveaza")
+def reactivate(id: int, db: Session = Depends(get_db), user=Depends(get_user)):
+    task = db.query(models.Sarcina).filter_by(id=id, utilizator_id=user.id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task inexistent")
+
+    task.finalizata = False
+    db.commit()
+    return {"msg": "ok"}
+
 @app.delete("/sarcini/{id}")
 def delete(id: int, db: Session = Depends(get_db), user=Depends(get_user)):
     task = db.query(models.Sarcina).filter_by(id=id, utilizator_id=user.id).first()
