@@ -5,57 +5,194 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestionar de sarcini</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #4f46e5;
+            --brand-dark: #4338ca;
+            --bg-soft: #f5f6fb;
+            --done: #16a34a;
+        }
+        body {
+            background: var(--bg-soft);
+            min-height: 100vh;
+        }
+        .navbar-brand-custom {
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        }
+        .navbar-brand-custom .navbar-brand,
+        .navbar-brand-custom a,
+        .navbar-brand-custom span,
+        .navbar-brand-custom .btn-outline-light {
+            color: #fff;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+            border-radius: .75rem;
+        }
+        .task-card {
+            transition: transform .15s ease, box-shadow .15s ease, opacity .2s ease;
+            border-left: 4px solid var(--brand);
+        }
+        .task-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,.08);
+        }
+        .task-card.done {
+            border-left-color: var(--done);
+            background: #f6fcf7;
+        }
+        .task-card.done .task-title,
+        .task-card.done .task-desc {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+        .task-card.removing {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            opacity: .35;
+        }
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .25rem .75rem;
+            border-radius: 999px;
+            font-size: .825rem;
+            background: #eef2ff;
+            color: var(--brand-dark);
+            font-weight: 500;
+        }
+        .stat-pill.done { background: #dcfce7; color: #166534; }
+        .stat-pill.pending { background: #fef3c7; color: #92400e; }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+        }
+        .auth-wrap {
+            min-height: calc(100vh - 80px);
+            display: flex;
+            align-items: center;
+        }
+        .toast-container { z-index: 1080; }
+        .spinner-inline {
+            width: 1rem; height: 1rem;
+            border-width: .15rem;
+        }
+        .form-control:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 .2rem rgba(79,70,229,.15);
+        }
+        .btn-primary {
+            background: var(--brand);
+            border-color: var(--brand);
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background: var(--brand-dark);
+            border-color: var(--brand-dark);
+        }
+        .filter-bar {
+            background: #fff;
+            border-radius: .75rem;
+            padding: .75rem 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.05);
+        }
+    </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark bg-primary">
+<nav class="navbar navbar-brand-custom shadow-sm">
     <div class="container">
-        <span class="navbar-brand fw-bold" style="cursor:pointer" onclick="arataPagina('principal')">Gestionar de sarcini</span>
+        <span class="navbar-brand fw-bold d-flex align-items-center gap-2" style="cursor:pointer" onclick="arataPagina('principal')">
+            <i class="bi bi-check2-square"></i> Gestionar de sarcini
+        </span>
         <div class="d-flex align-items-center gap-3">
-            <a href="#" class="text-white text-decoration-none" onclick="arataPagina('about'); return false;">About Me</a>
+            <a href="#" class="text-white text-decoration-none d-flex align-items-center gap-1" onclick="arataPagina('about'); return false;">
+                <i class="bi bi-person-circle"></i> About
+            </a>
             <div id="info-utilizator" class="d-none align-items-center gap-3">
-                <span id="email-utilizator" class="text-white small"></span>
-                <button class="btn btn-outline-light btn-sm" onclick="deconecteaza()">Deconectare</button>
+                <span id="email-utilizator" class="text-white small opacity-75"></span>
+                <button class="btn btn-outline-light btn-sm" onclick="deconecteaza()">
+                    <i class="bi bi-box-arrow-right"></i> Deconectare
+                </button>
             </div>
         </div>
     </div>
 </nav>
 
+<!-- TOAST -->
+<div class="toast-container position-fixed top-0 end-0 p-3"></div>
+
 <div class="container mt-4">
 
     <!-- AUTH -->
-    <div id="sectiune-auth">
-        <div class="row justify-content-center">
-            <div class="col-md-5">
+    <div id="sectiune-auth" class="auth-wrap">
+        <div class="row justify-content-center w-100">
+            <div class="col-md-5 col-lg-4">
 
                 <div id="form-inregistrare" class="card">
-                    <div class="card-body">
-                        <h5>Înregistrare</h5>
-                        <div id="eroare-inregistrare" class="alert alert-danger d-none"></div>
-                        <div id="succes-inregistrare" class="alert alert-success d-none"></div>
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-person-plus-fill text-primary" style="font-size:2.5rem;"></i>
+                            <h4 class="mt-2 mb-0">Înregistrare</h4>
+                            <small class="text-muted">Creează-ți un cont nou</small>
+                        </div>
 
-                        <input type="email" id="reg-email" class="form-control mb-2" placeholder="Email">
-                        <input type="password" id="reg-parola" class="form-control mb-2" placeholder="Parolă">
+                        <div id="eroare-inregistrare" class="alert alert-danger d-none py-2"></div>
 
-                        <button class="btn btn-primary w-100" onclick="inregistreaza()">Înregistrează-te</button>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Email</label>
+                            <input type="email" id="reg-email" class="form-control" placeholder="nume@exemplu.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Parolă</label>
+                            <input type="password" id="reg-parola" class="form-control" placeholder="Minim 6 caractere">
+                        </div>
 
-                        <p class="text-center mt-3">
-                            Ai cont? <a href="#" onclick="comutaFormular(); return false;">Autentifică-te</a>
+                        <button class="btn btn-primary w-100" onclick="inregistreaza()">
+                            <i class="bi bi-check2"></i> Înregistrează-te
+                        </button>
+
+                        <p class="text-center mt-3 mb-0 small">
+                            Ai deja cont? <a href="#" onclick="comutaFormular(); return false;">Autentifică-te</a>
                         </p>
                     </div>
                 </div>
 
                 <div id="form-autentificare" class="card d-none">
-                    <div class="card-body">
-                        <h5>Autentificare</h5>
-                        <div id="eroare-autentificare" class="alert alert-danger d-none"></div>
+                    <div class="card-body p-4">
+                        <div class="text-center mb-3">
+                            <i class="bi bi-box-arrow-in-right text-primary" style="font-size:2.5rem;"></i>
+                            <h4 class="mt-2 mb-0">Autentificare</h4>
+                            <small class="text-muted">Bine ai revenit!</small>
+                        </div>
 
-                        <input type="email" id="auth-email" class="form-control mb-2" placeholder="Email">
-                        <input type="password" id="auth-parola" class="form-control mb-2" placeholder="Parolă">
+                        <div id="eroare-autentificare" class="alert alert-danger d-none py-2"></div>
 
-                        <button class="btn btn-primary w-100" onclick="autentifica()">Conectează-te</button>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Email</label>
+                            <input type="email" id="auth-email" class="form-control" placeholder="nume@exemplu.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Parolă</label>
+                            <input type="password" id="auth-parola" class="form-control" placeholder="Parola ta">
+                        </div>
 
-                        <p class="text-center mt-3">
+                        <button class="btn btn-primary w-100" onclick="autentifica()">
+                            <i class="bi bi-box-arrow-in-right"></i> Conectează-te
+                        </button>
+
+                        <p class="text-center mt-3 mb-0 small">
                             Nu ai cont? <a href="#" onclick="comutaFormular(); return false;">Înregistrează-te</a>
                         </p>
                     </div>
@@ -69,13 +206,18 @@
     <div id="sectiune-about" class="d-none">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-body text-center">
-                        <h2 class="mb-3">About Me</h2>
+                <div class="card">
+                    <div class="card-body text-center p-5">
+                        <i class="bi bi-person-circle text-primary" style="font-size:4rem;"></i>
+                        <h2 class="mt-3 mb-3">About Me</h2>
                         <h4 class="text-primary">Zghibarta Elena</h4>
                         <p class="fs-5 text-muted mb-2">Studentă anul 1, Master Securitate Cibernetică</p>
                         <hr>
-                        <p class="mt-3">Acest proiect reprezintă un gestionar de sarcini (task manager) dezvoltat cu <strong>FastAPI</strong> și <strong>SQLite</strong>, cu autentificare bazată pe <strong>JWT</strong> și hashing securizat al parolelor cu <strong>bcrypt</strong>.</p>
+                        <p class="mt-3 mb-0">
+                            Acest proiect reprezintă un gestionar de sarcini (task manager) dezvoltat cu
+                            <strong>FastAPI</strong> și <strong>SQLite</strong>, cu autentificare bazată pe
+                            <strong>JWT</strong> și hashing securizat al parolelor cu <strong>bcrypt</strong>.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -87,35 +229,90 @@
 
         <div class="card mb-3">
             <div class="card-body">
-                <h5>Adaugă sarcină</h5>
-                <input id="sarcina-titlu" class="form-control mb-2" placeholder="Titlu">
-                <textarea id="sarcina-descriere" class="form-control mb-2" placeholder="Descriere"></textarea>
-                <button class="btn btn-success" onclick="adaugaSarcina()">Adaugă</button>
+                <h5 class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-plus-circle-fill text-primary"></i> Adaugă sarcină
+                </h5>
+                <input id="sarcina-titlu" class="form-control mb-2" placeholder="Titlu (obligatoriu)" maxlength="120">
+                <textarea id="sarcina-descriere" class="form-control mb-2" rows="2" placeholder="Descriere (opțional)"></textarea>
+                <button class="btn btn-primary btn-action" id="btn-adauga" onclick="adaugaSarcina()">
+                    <i class="bi bi-plus-lg"></i> Adaugă
+                </button>
             </div>
         </div>
 
-        <!-- FILTRU -->
-        <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" id="doar-nefinalizate"
-                   onchange="incarcaSarcini()">
-            <label class="form-check-label" for="doar-nefinalizate">
-                Afișează doar sarcinile nefinalizate
-            </label>
+        <!-- FILTRU + STATISTICI -->
+        <div class="filter-bar mb-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <span class="stat-pill"><i class="bi bi-list-ul"></i> Total: <span id="stat-total">0</span></span>
+                <span class="stat-pill pending"><i class="bi bi-hourglass-split"></i> Active: <span id="stat-active">0</span></span>
+                <span class="stat-pill done"><i class="bi bi-check2-circle"></i> Finalizate: <span id="stat-done">0</span></span>
+            </div>
+            <div class="form-check m-0">
+                <input class="form-check-input" type="checkbox" id="doar-nefinalizate" onchange="incarcaSarcini()">
+                <label class="form-check-label small" for="doar-nefinalizate">
+                    Doar nefinalizate
+                </label>
+            </div>
         </div>
 
-        <h5>Sarcinile mele</h5>
+        <h5 class="d-flex align-items-center gap-2"><i class="bi bi-card-checklist"></i> Sarcinile mele</h5>
         <div id="lista-sarcini"></div>
 
     </div>
 </div>
 
+<!-- MODAL CONFIRMARE STERGERE -->
+<div class="modal fade" id="modal-confirm" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size:2.5rem;"></i>
+                <h5 class="mt-2">Ești sigur?</h5>
+                <p class="text-muted small mb-3">Această sarcină va fi ștearsă definitiv.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+                    <button class="btn btn-danger" id="btn-confirm-delete">
+                        <i class="bi bi-trash"></i> Șterge
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const API = "";
+let modalConfirm = null;
+let pendingDeleteId = null;
+
+// TOAST
+function toast(mesaj, tip = "success") {
+    const cont = document.querySelector(".toast-container");
+    const id = "t" + Date.now();
+    const culoare = { success: "text-bg-success", error: "text-bg-danger", info: "text-bg-primary" }[tip] || "text-bg-secondary";
+    const icon = { success: "check-circle-fill", error: "exclamation-circle-fill", info: "info-circle-fill" }[tip] || "info-circle";
+    const html = `
+        <div id="${id}" class="toast ${culoare}" role="alert">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <i class="bi bi-${icon}"></i> ${escapeHtml(mesaj)}
+            </div>
+        </div>`;
+    cont.insertAdjacentHTML("beforeend", html);
+    const el = document.getElementById(id);
+    const t = new bootstrap.Toast(el, { delay: 2500 });
+    el.addEventListener("hidden.bs.toast", () => el.remove());
+    t.show();
+}
 
 // TOKEN
 function salveazaToken(t){ localStorage.setItem("token", t); }
 function obtineToken(){ return localStorage.getItem("token"); }
-function deconecteaza(){ localStorage.removeItem("token"); actualizeazaUI(); }
+function deconecteaza(){
+    localStorage.removeItem("token");
+    toast("Te-ai deconectat", "info");
+    actualizeazaUI();
+}
 
 // NAVIGARE
 function arataPagina(pagina) {
@@ -129,10 +326,8 @@ function arataPagina(pagina) {
     }
 }
 
-// UI
 function actualizeazaUI() {
     const token = obtineToken();
-
     const auth = document.getElementById("sectiune-auth");
     const tasks = document.getElementById("sectiune-sarcini");
     const about = document.getElementById("sectiune-about");
@@ -155,7 +350,6 @@ function actualizeazaUI() {
         }
 
         incarcaSarcini();
-
     } else {
         auth.classList.remove("d-none");
         tasks.classList.add("d-none");
@@ -169,42 +363,77 @@ function comutaFormular(){
     document.getElementById("form-autentificare").classList.toggle("d-none");
 }
 
+function aratEroare(idEl, mesaj){
+    const el = document.getElementById(idEl);
+    el.textContent = mesaj;
+    el.classList.remove("d-none");
+    setTimeout(() => el.classList.add("d-none"), 4000);
+}
+
 // AUTH
 async function inregistreaza(){
-    const r = await fetch(`${API}/inregistrare`,{
-        method:"POST",
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-            email: document.getElementById("reg-email").value,
-            parola: document.getElementById("reg-parola").value
-        })
-    });
+    const email = document.getElementById("reg-email").value.trim();
+    const parola = document.getElementById("reg-parola").value;
 
-    if(r.ok){
-        alert("Cont creat!");
-    } else {
-        alert("Eroare la înregistrare");
+    if (!email || !parola) {
+        aratEroare("eroare-inregistrare", "Completează toate câmpurile");
+        return;
+    }
+    if (parola.length < 6) {
+        aratEroare("eroare-inregistrare", "Parola trebuie să aibă minim 6 caractere");
+        return;
+    }
+
+    try {
+        const r = await fetch(`${API}/inregistrare`,{
+            method:"POST",
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({ email, parola })
+        });
+
+        if(r.ok){
+            toast("Cont creat! Te poți autentifica.", "success");
+            document.getElementById("reg-email").value = "";
+            document.getElementById("reg-parola").value = "";
+            comutaFormular();
+            document.getElementById("auth-email").value = email;
+        } else {
+            const d = await r.json().catch(() => ({}));
+            aratEroare("eroare-inregistrare", d.detail || "Eroare la înregistrare");
+        }
+    } catch {
+        aratEroare("eroare-inregistrare", "Eroare de rețea");
     }
 }
 
 async function autentifica(){
-    const f = new URLSearchParams();
-    f.append("username", document.getElementById("auth-email").value);
-    f.append("password", document.getElementById("auth-parola").value);
+    const email = document.getElementById("auth-email").value.trim();
+    const parola = document.getElementById("auth-parola").value;
 
-    const r = await fetch(`${API}/autentificare`,{
-        method:"POST",
-        body:f
-    });
-
-    if(!r.ok){
-        alert("Date greșite");
+    if (!email || !parola) {
+        aratEroare("eroare-autentificare", "Completează toate câmpurile");
         return;
     }
 
-    const d = await r.json();
-    salveazaToken(d.access_token);
-    actualizeazaUI();
+    const f = new URLSearchParams();
+    f.append("username", email);
+    f.append("password", parola);
+
+    try {
+        const r = await fetch(`${API}/autentificare`,{ method:"POST", body:f });
+
+        if(!r.ok){
+            aratEroare("eroare-autentificare", "Email sau parolă greșite");
+            return;
+        }
+
+        const d = await r.json();
+        salveazaToken(d.access_token);
+        toast("Bine ai revenit!", "success");
+        actualizeazaUI();
+    } catch {
+        aratEroare("eroare-autentificare", "Eroare de rețea");
+    }
 }
 
 // TASKS
@@ -216,43 +445,79 @@ async function incarcaSarcini() {
         ? `${API}/sarcini?doar_nefinalizate=true`
         : `${API}/sarcini`;
 
-    const raspuns = await fetch(url, {
-        headers: { "Authorization": `Bearer ${token}` }
-    });
-
-    const data = await raspuns.json();
-    randeazaSarcini(data);
+    try {
+        const raspuns = await fetch(url, { headers: { "Authorization": `Bearer ${token}` } });
+        if (raspuns.status === 401) { deconecteaza(); return; }
+        const data = await raspuns.json();
+        randeazaSarcini(data);
+    } catch {
+        toast("Eroare la încărcarea sarcinilor", "error");
+    }
 }
+
+function actualizeazaStatistici(sarcini) {
+    const total = sarcini.length;
+    const done = sarcini.filter(s => s.finalizata).length;
+    document.getElementById("stat-total").textContent = total;
+    document.getElementById("stat-done").textContent = done;
+    document.getElementById("stat-active").textContent = total - done;
+}
+
 function randeazaSarcini(sarcini) {
     const container = document.getElementById("lista-sarcini");
     container.innerHTML = "";
 
+    actualizeazaStatistici(sarcini);
+
     if (!sarcini.length) {
-        container.innerHTML = "<p class='text-muted'>Nu ai sarcini.</p>";
+        const doar = document.getElementById("doar-nefinalizate").checked;
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p class="mt-2 mb-0">${doar ? "Nicio sarcină activă. Bravo!" : "Nu ai nicio sarcină încă."}</p>
+                <small>${doar ? "" : "Adaugă prima sarcină mai sus."}</small>
+            </div>`;
         return;
     }
 
+    // Sortare: nefinalizate primele
+    sarcini.sort((a, b) => Number(a.finalizata) - Number(b.finalizata));
+
     sarcini.forEach(s => {
         const div = document.createElement("div");
-        div.className = "card mb-2";
+        div.className = `card task-card mb-2 ${s.finalizata ? "done" : ""}`;
         div.id = `task-${s.id}`;
+
+        const badge = s.finalizata
+            ? `<span class="badge text-bg-success ms-2"><i class="bi bi-check2"></i> Finalizat</span>`
+            : `<span class="badge text-bg-warning ms-2"><i class="bi bi-hourglass"></i> În curs</span>`;
+
+        const btnFinalizeaza = s.finalizata
+            ? ""
+            : `<button class="btn btn-success btn-sm btn-action" onclick="finalizeaza(${s.id})">
+                   <i class="bi bi-check2-circle"></i> Finalizează
+               </button>`;
+
+        const btnEditeaza = s.finalizata
+            ? ""
+            : `<button class="btn btn-outline-secondary btn-sm btn-action"
+                   onclick='editeazaSarcina(${s.id}, ${JSON.stringify(s.titlu)}, ${JSON.stringify(s.descriere || "")})'>
+                   <i class="bi bi-pencil"></i> Editează
+               </button>`;
 
         div.innerHTML = `
             <div class="card-body">
-                <h5>${escapeHtml(s.titlu)}</h5>
-                <p>${escapeHtml(s.descriere || "")}</p>
-
-                <button class="btn btn-success btn-sm" onclick="finalizeaza(${s.id})">
-                    Finalizează
-                </button>
-
-                <button class="btn btn-warning btn-sm" onclick="editeazaSarcina(${s.id}, \`${escapeHtml(s.titlu)}\`, \`${escapeHtml(s.descriere || "")}\`)">
-                    Editează
-                </button>
-
-                <button class="btn btn-danger btn-sm" onclick="sterge(${s.id})">
-                    Șterge
-                </button>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="task-title mb-0">${escapeHtml(s.titlu)} ${badge}</h5>
+                </div>
+                ${s.descriere ? `<p class="task-desc text-muted mb-2">${escapeHtml(s.descriere)}</p>` : ""}
+                <div class="d-flex flex-wrap gap-2">
+                    ${btnFinalizeaza}
+                    ${btnEditeaza}
+                    <button class="btn btn-outline-danger btn-sm btn-action" onclick="cereStergere(${s.id})">
+                        <i class="bi bi-trash"></i> Șterge
+                    </button>
+                </div>
             </div>
         `;
 
@@ -260,154 +525,170 @@ function randeazaSarcini(sarcini) {
     });
 }
 
-/*function editeazaSarcina(sarcina) {
-    const container = document.getElementById("lista-sarcini");
-    container.innerHTML = "";
-
-    const card = document.createElement("div");
-    card.className = "card mb-2";
-
-    const body = document.createElement("div");
-    body.className = "card-body";
-
-    const inputTitlu = document.createElement("input");
-    inputTitlu.className = "form-control mb-2";
-    inputTitlu.value = sarcina.titlu;
-
-    const inputDesc = document.createElement("textarea");
-    inputDesc.className = "form-control mb-2";
-    inputDesc.value = sarcina.descriere || "";
-
-    const btnSave = document.createElement("button");
-    btnSave.className = "btn btn-success btn-sm me-2";
-    btnSave.textContent = "Salvează";
-
-    btnSave.onclick = async () => {
-        const token = obtineToken();
-
-        await fetch(`${API}/sarcini/${sarcina.id}`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                titlu: inputTitlu.value,
-                descriere: inputDesc.value
-            })
-        });
-
-        incarcaSarcini();
-    };
-
-    const btnCancel = document.createElement("button");
-    btnCancel.className = "btn btn-secondary btn-sm";
-    btnCancel.textContent = "Anulează";
-    btnCancel.onclick = incarcaSarcini;
-
-    body.appendChild(inputTitlu);
-    body.appendChild(inputDesc);
-    body.appendChild(btnSave);
-    body.appendChild(btnCancel);
-
-    card.appendChild(body);
-    container.appendChild(card);
-}*/
-
 // EDITARE
-function editeazaSarcina(id,t,d){
+function editeazaSarcina(id, t, d){
     const el = document.getElementById(`task-${id}`);
 
     el.innerHTML = `
-        <input id="titlu-${id}" class="form-control mb-2" value="${t}">
-        <textarea id="desc-${id}" class="form-control mb-2">${d}</textarea>
-
-        <button class="btn btn-success btn-sm" onclick="salveazaEdit(${id})">Salvează</button>
-        <button class="btn btn-secondary btn-sm" onclick="incarcaSarcini()">Anulează</button>
+        <div class="card-body">
+            <label class="form-label small text-muted">Titlu</label>
+            <input id="titlu-${id}" class="form-control mb-2" value="${escapeAttr(t)}" maxlength="120">
+            <label class="form-label small text-muted">Descriere</label>
+            <textarea id="desc-${id}" class="form-control mb-2" rows="2">${escapeHtml(d)}</textarea>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm btn-action" onclick="salveazaEdit(${id})">
+                    <i class="bi bi-check2"></i> Salvează
+                </button>
+                <button class="btn btn-secondary btn-sm btn-action" onclick="incarcaSarcini()">
+                    <i class="bi bi-x"></i> Anulează
+                </button>
+            </div>
+        </div>
     `;
+    document.getElementById(`titlu-${id}`).focus();
 }
 
 async function salveazaEdit(id){
     const token = obtineToken();
+    const titlu = document.getElementById(`titlu-${id}`).value.trim();
+    const descriere = document.getElementById(`desc-${id}`).value.trim();
 
-    await fetch(`${API}/sarcini/${id}`,{
-        method:"PUT",
-        headers:{
-            "Content-Type":"application/json",
-            Authorization:`Bearer ${token}`
-        },
-        body:JSON.stringify({
-            titlu:document.getElementById(`titlu-${id}`).value,
-            descriere:document.getElementById(`desc-${id}`).value
-        })
-    });
+    if (!titlu) { toast("Titlul nu poate fi gol", "error"); return; }
 
-    incarcaSarcini();
+    try {
+        const r = await fetch(`${API}/sarcini/${id}`,{
+            method:"PUT",
+            headers:{ "Content-Type":"application/json", Authorization:`Bearer ${token}` },
+            body:JSON.stringify({ titlu, descriere })
+        });
+        if (!r.ok) throw new Error();
+        toast("Sarcină actualizată", "success");
+        incarcaSarcini();
+    } catch {
+        toast("Eroare la salvare", "error");
+    }
 }
 
 // ACTIUNI
 async function adaugaSarcina() {
     const token = obtineToken();
-
     const titlu = document.getElementById("sarcina-titlu").value.trim();
     const descriere = document.getElementById("sarcina-descriere").value.trim();
 
-    if (!titlu) return;
+    if (!titlu) {
+        toast("Introdu un titlu", "error");
+        return;
+    }
+
+    const btn = document.getElementById("btn-adauga");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-inline"></span> Se adaugă...`;
 
     try {
-        await fetch(`${API}/sarcini`, {
+        const r = await fetch(`${API}/sarcini`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                titlu: titlu,
-                descriere: descriere
-            })
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+            body: JSON.stringify({ titlu, descriere })
         });
+        if (!r.ok) throw new Error();
 
         document.getElementById("sarcina-titlu").value = "";
         document.getElementById("sarcina-descriere").value = "";
-
+        toast("Sarcină adăugată", "success");
         incarcaSarcini();
-    } catch (e) {
-        alert("Eroare la adăugare");
+    } catch {
+        toast("Eroare la adăugare", "error");
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-plus-lg"></i> Adaugă`;
     }
 }
 
 async function finalizeaza(id){
     const token = obtineToken();
+    const card = document.getElementById(`task-${id}`);
 
-    await fetch(`${API}/sarcini/${id}/finaliza`,{
-        method:"PATCH",
-        headers:{Authorization:`Bearer ${token}`}
-    });
+    try {
+        const r = await fetch(`${API}/sarcini/${id}/finaliza`,{
+            method:"PATCH",
+            headers:{ Authorization:`Bearer ${token}` }
+        });
+        if (!r.ok) throw new Error();
 
-    incarcaSarcini();
+        // Feedback vizual imediat
+        if (card) {
+            card.classList.add("done");
+            const titlu = card.querySelector(".task-title");
+            const oldBadge = titlu.querySelector(".badge");
+            if (oldBadge) {
+                oldBadge.className = "badge text-bg-success ms-2";
+                oldBadge.innerHTML = `<i class="bi bi-check2"></i> Finalizat`;
+            }
+        }
+        toast("Sarcină finalizată", "success");
+
+        // Reîncarcă pentru reordonare + actualizare butoane + statistici
+        setTimeout(incarcaSarcini, 250);
+    } catch {
+        toast("Eroare la finalizare", "error");
+    }
 }
 
-async function sterge(id){
-    if(!confirm("Sigur vrei să ștergi?")) return;
+function cereStergere(id) {
+    pendingDeleteId = id;
+    modalConfirm.show();
+}
+
+async function stergeConfirmat() {
+    if (pendingDeleteId == null) return;
+    const id = pendingDeleteId;
+    pendingDeleteId = null;
+    modalConfirm.hide();
 
     const token = obtineToken();
+    const card = document.getElementById(`task-${id}`);
+    if (card) card.classList.add("removing");
 
-    await fetch(`${API}/sarcini/${id}`,{
-        method:"DELETE",
-        headers:{Authorization:`Bearer ${token}`}
-    });
-
-    incarcaSarcini();
+    try {
+        const r = await fetch(`${API}/sarcini/${id}`,{
+            method:"DELETE",
+            headers:{ Authorization:`Bearer ${token}` }
+        });
+        if (!r.ok) throw new Error();
+        toast("Sarcină ștearsă", "success");
+        setTimeout(incarcaSarcini, 200);
+    } catch {
+        if (card) card.classList.remove("removing");
+        toast("Eroare la ștergere", "error");
+    }
 }
 
 // UTIL
 function escapeHtml(t){
-    const d=document.createElement("div");
-    d.textContent=t;
+    const d = document.createElement("div");
+    d.textContent = t == null ? "" : String(t);
     return d.innerHTML;
 }
+function escapeAttr(t){
+    return escapeHtml(t).replace(/"/g, "&quot;");
+}
 
-document.addEventListener("DOMContentLoaded",actualizeazaUI);
+// INIT
+document.addEventListener("DOMContentLoaded", () => {
+    modalConfirm = new bootstrap.Modal(document.getElementById("modal-confirm"));
+    document.getElementById("btn-confirm-delete").addEventListener("click", stergeConfirmat);
+
+    // Enter pentru submit pe formurile de auth
+    ["reg-parola","auth-parola"].forEach(id => {
+        document.getElementById(id).addEventListener("keydown", e => {
+            if (e.key === "Enter") {
+                id === "reg-parola" ? inregistreaza() : autentifica();
+            }
+        });
+    });
+
+    actualizeazaUI();
+});
 </script>
 
 </body>
